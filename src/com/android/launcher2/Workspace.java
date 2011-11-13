@@ -79,6 +79,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     private int mDefaultScreen;
 
     private boolean mFirstLayout = true;
+    private boolean mUseExtendedHotseats = Preferences.getInstance().getExtendedHotseats();
 
     private int mCurrentScreen;
     private int mNextScreen = INVALID_SCREEN;
@@ -328,10 +329,11 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             mScroller.abortAnimation();
         clearVacantCache();
         mCurrentScreen = Math.max(0, Math.min(currentScreen, getChildCount() - 1));
-        if (mPreviousIndicator != null) {
-            updateIndicators(mCurrentScreen);
+        if (!mUseExtendedHotseats) {
+            if (mPreviousIndicator != null) {
+                updateIndicators(mCurrentScreen);
+            }
         }
-
         scrollTo(mCurrentScreen * getWidth(), 0);
         updateWallpaperOffset();
         invalidate();
@@ -587,7 +589,9 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         } else
             mCurrentScreen = Math.max(0, Math.min(mNextScreen, getChildCount() - 1));
             if (mPreviousIndicator != null) {
-                updateIndicators(mCurrentScreen);
+                if (!mUseExtendedHotseats) {
+                    updateIndicators(mCurrentScreen);
+                }
             }
             Launcher.setScreen(mCurrentScreen);
             mNextScreen = INVALID_SCREEN;
@@ -1176,7 +1180,9 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         mNextScreen = whichScreen;
 
         if (mPreviousIndicator != null) {
-            updateIndicators(mNextScreen);
+            if (!mUseExtendedHotseats) {
+                updateIndicators(mNextScreen);
+            }
         }
 
         View focusedChild = getFocusedChild();

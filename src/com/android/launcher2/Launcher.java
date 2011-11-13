@@ -228,11 +228,16 @@ public final class Launcher extends Activity
     private CharSequence[] mHotseatLabels = null;
     private int mHotseatNumber = 1;
 
+    private int HOTSEAT_FARLEFT = 1;
+    private int HOTSEAT_FARRIGHT = 2;
     private int HOTSEAT_LEFT = 3;
     private int HOTSEAT_RIGHT = 4;
 
     private static final String LAUNCHER_HOTSEAT_LEFT = "launcher_hotseat_left";
+    private static final String LAUNCHER_HOTSEAT_FARLEFT = "launcher_hotseat_farleft";
     private static final String LAUNCHER_HOTSEAT_RIGHT = "launcher_hotseat_right";
+    private static final String LAUNCHER_HOTSEAT_FARRIGHT = "launcher_hotseat_farright";
+    private boolean mUseExtendedHotseats = Preferences.getInstance().getExtendedHotseats();
 
     private float iconScale = 0.80f;
     private static int sIconWidth = -1;
@@ -466,6 +471,8 @@ public final class Launcher extends Activity
         try {
             mHotseatConfig[0] = mSharedPrefs.getString(LAUNCHER_HOTSEAT_LEFT, mHotseatConfig[0]);
             mHotseatConfig[1] = mSharedPrefs.getString(LAUNCHER_HOTSEAT_RIGHT, mHotseatConfig[1]);
+            mHotseatConfig[2] = mSharedPrefs.getString(LAUNCHER_HOTSEAT_FARLEFT, mHotseatConfig[2]);
+            mHotseatConfig[3] = mSharedPrefs.getString(LAUNCHER_HOTSEAT_FARRIGHT, mHotseatConfig[3]);
         }
         catch (NullPointerException e) {
         }
@@ -661,6 +668,12 @@ public final class Launcher extends Activity
         } else if (hotseatNumber == HOTSEAT_RIGHT) {
             editor.putString(LAUNCHER_HOTSEAT_RIGHT, data.toUri(0));
             editor.commit();
+        } else if (hotseatNumber == HOTSEAT_FARLEFT) {
+            editor.putString(LAUNCHER_HOTSEAT_FARLEFT, data.toUri(0));
+            editor.commit();
+        } else if (hotseatNumber == HOTSEAT_FARRIGHT) {
+            editor.putString(LAUNCHER_HOTSEAT_FARRIGHT, data.toUri(0));
+            editor.commit();
         }
         loadHotseats();
         setupViews();
@@ -839,6 +852,9 @@ public final class Launcher extends Activity
         mHandleView.setOnClickListener(this);
         mHandleView.setOnLongClickListener(this);
 
+        ImageView hotseatfarRight = (ImageView) findViewById(R.id.hotseat_farright);
+        ImageView dockBackground = (ImageView) findViewById(R.id.dock_background);
+        ImageView hotseatfarLeft = (ImageView) findViewById(R.id.hotseat_farleft);
         mWidgetChooser = (WidgetChooser) findViewById(R.id.widget_chooser);
         if (mWidgetChooser != null) {
             mWidgetChooser.setDragController(dragController);
@@ -852,6 +868,13 @@ public final class Launcher extends Activity
              hotseatRight.setContentDescription(mHotseatLabels[1]);
              hotseatRight.setImageDrawable(mHotseatIcons[1]);
              hotseatRight.setOnLongClickListener(this);
+             
+             hotseatfarLeft.setContentDescription(mHotseatLabels[2]);
+             hotseatfarLeft.setImageDrawable(mHotseatIcons[2]);
+             hotseatfarLeft.setOnLongClickListener(this);
+             hotseatfarRight.setContentDescription(mHotseatLabels[3]);
+             hotseatfarRight.setImageDrawable(mHotseatIcons[3]);
+             hotseatfarRight.setOnLongClickListener(this);
 
              mPreviousView = (ImageView) dragLayer.findViewById(R.id.previous_screen);
              mNextView = (ImageView) dragLayer.findViewById(R.id.next_screen);
@@ -864,6 +887,20 @@ public final class Launcher extends Activity
              mPreviousView.setOnLongClickListener(this);
              mNextView.setHapticFeedbackEnabled(false);
              mNextView.setOnLongClickListener(this);
+        }
+
+        if (mUseExtendedHotseats) {
+            mPreviousView.setVisibility(View.GONE);
+            mNextView.setVisibility(View.GONE);
+            hotseatfarRight.setVisibility(View.VISIBLE);
+            hotseatfarLeft.setVisibility(View.VISIBLE);
+            dockBackground.setBackgroundResource(R.drawable.dock_four);
+        } else {
+            mPreviousView.setVisibility(View.VISIBLE);
+            mNextView.setVisibility(View.VISIBLE);
+            hotseatfarRight.setVisibility(View.GONE);
+            hotseatfarLeft.setVisibility(View.GONE);
+            dockBackground.setBackgroundResource(R.drawable.dock_two);
         }
 
         workspace.setOnLongClickListener(this);
@@ -908,6 +945,10 @@ public final class Launcher extends Activity
             index = 0;
         } else if (v.getId() == R.id.hotseat_right) {
             index = 1;
+        } else if (v.getId() == R.id.hotseat_farleft) {
+            index = 2;
+        } else if (v.getId() == R.id.hotseat_farright) {
+            index = 3;
         }
 
         // reload these every tap; you never know when they might change
@@ -1171,8 +1212,7 @@ public final class Launcher extends Activity
 
         getContentResolver().unregisterContentObserver(mWidgetObserver);
 
-        dismissPreview(mPreviousView);
-        dismissPreview(mNextView);
+        this.dismissPrevNext();
 
         unregisterReceiver(mCloseSystemDialogsReceiver);
         mWorkspace.unregisterProvider();
@@ -1515,6 +1555,13 @@ public final class Launcher extends Activity
                 true, mWidgetObserver);
     }
 
+    private void dismissPrevNext() {
+        if (!mUseExtendedHotseats) {
+            dismissPreview(mPreviousView);
+            dismissPreview(mNextView);
+        }
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
@@ -1547,8 +1594,7 @@ public final class Launcher extends Activity
         }
         // Some launcher layouts don't have a previous and next view
         if (mPreviousView != null) {
-            dismissPreview(mPreviousView);
-            dismissPreview(mNextView);
+            this.dismissPrevNext();
         }
     }
 
@@ -1747,6 +1793,16 @@ public final class Launcher extends Activity
                 mWorkspace.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS,
                     HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
                 pickHotseatShortcut(HOTSEAT_RIGHT);
+                return true;
+            case R.id.hotseat_farleft:
+                mWorkspace.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS,
+                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+                pickHotseatShortcut(HOTSEAT_FARLEFT);
+                return true;
+            case R.id.hotseat_farright:
+                mWorkspace.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS,
+                    HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+                pickHotseatShortcut(HOTSEAT_FARRIGHT);
                 return true;
                 
         }
