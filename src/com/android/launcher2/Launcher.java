@@ -237,6 +237,7 @@ public final class Launcher extends Activity
     private boolean mUseExtendedHotseats = Preferences.getInstance().getExtendedHotseats();
     private boolean mUseTransparentBackground = Preferences.getInstance().getTransparentBackground();
     private boolean mUseDarkBackground = Preferences.getInstance().getDarkBackground();
+    private static boolean mIsFirstLaunch = Preferences.getInstance().getIsFirstLaunch();
 
     private float iconScale = 0.80f;
     private static int sIconWidth = -1;
@@ -293,7 +294,29 @@ public final class Launcher extends Activity
 
         IntentFilter filter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
         registerReceiver(mCloseSystemDialogsReceiver, filter);
+
+	if (mIsFirstLaunch) {
+		mIsFirstLaunch = false;
+		alertbox("Welcome to Oxygen!", 
+		 "This ROM has been extensively tested and is mostly bug free, however if you do happen to have a problem, please attempt a *FULL* wipe before reporting it.\n" +
+		 "\n" +
+		 "Finally from all of us at the Oxygen team, we hope you have a great experience using Oxygen.\n" +
+		 "\n" +
+                 "For support visit oxygen.im.");
+	}
     }
+
+    protected void alertbox(String title, String mymessage) {
+           new AlertDialog.Builder(this)
+              .setMessage(mymessage)
+              .setTitle(title)
+              .setCancelable(true)
+              .setNeutralButton("OK",
+                 new DialogInterface.OnClickListener() {
+                 public void onClick(DialogInterface dialog, int whichButton){}
+                 })
+              .show();
+        }
 
     private void checkForLocaleChange() {
         if (sLocaleConfiguration == null) {
