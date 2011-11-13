@@ -35,7 +35,7 @@
     <string name="folder_name">Folder</string>
     <string name="select_custom_app_title">Select custom app</string>
     <!-- Menus -->
-    <string name="menu_launcher_settings">Launcher Prefs</string>
+    <string name="menu_launcher_settings">Preferences</string>
     <string name="settings_endless_desktop_loop">Endless Looping</string>
     <string name="settings_endless_desktop_loop_summary_on">Workspaces will infinitely loop</string>
     <string name="settings_endless_desktop_loop_summary_off">Workspaces will end on number of screens (stock behavior)</string>
