@@ -1446,7 +1446,7 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
 
     void setLauncher(Launcher launcher) {
         mLauncher = launcher;
-        registerProvider();
+        if (Preferences.getInstance().getScrollableWidgets())registerProvider();
     }
 
     public void setDragController(DragController dragController) {
