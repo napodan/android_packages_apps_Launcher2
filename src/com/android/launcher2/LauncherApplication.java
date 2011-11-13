@@ -37,6 +37,7 @@ public class LauncherApplication extends Application {
 
         super.onCreate();
 
+        Preferences.getInstance().setContext(this);
         mIconCache = new IconCache(this);
         mModel = new LauncherModel(this, mIconCache);
         sIsScreenXLarge = (getResources().getConfiguration().screenLayout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE;
@@ -69,6 +70,7 @@ public class LauncherApplication extends Application {
 
         ContentResolver resolver = getContentResolver();
         resolver.unregisterContentObserver(mFavoritesObserver);
+        Preferences.getInstance().setContext(null);
     }
 
     /**
