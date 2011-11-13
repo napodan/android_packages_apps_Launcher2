@@ -801,6 +801,10 @@ public final class Launcher extends Activity
      * Finds all the views we need and configure them properly.
      */
     private void setupViews() {
+        mUseExtendedHotseats = Preferences.getInstance().getExtendedHotseats();
+   	mUseTransparentBackground = Preferences.getInstance().getTransparentBackground();
+    	mUseDarkBackground = Preferences.getInstance().getDarkBackground();
+
         DragController dragController = mDragController;
 
         DragLayer dragLayer = (DragLayer) findViewById(R.id.drag_layer);
@@ -853,7 +857,7 @@ public final class Launcher extends Activity
         mPreviousView.setOnLongClickListener(this);
         mNextView.setHapticFeedbackEnabled(false);
         mNextView.setOnLongClickListener(this);
-
+	
         if (mUseExtendedHotseats) {
             mPreviousView.setVisibility(View.GONE);
             mNextView.setVisibility(View.GONE);
@@ -862,9 +866,11 @@ public final class Launcher extends Activity
             if (mUseTransparentBackground) {
                 dockBackground.setVisibility(View.GONE);
             } else if (mUseDarkBackground) {
-                dockBackground.setBackgroundResource(R.drawable.dock_four_dark);
+               dockBackground.setBackgroundResource(R.drawable.dock_four_dark);
+               dockBackground.setVisibility(View.VISIBLE);
             } else {
                dockBackground.setBackgroundResource(R.drawable.dock_four);
+               dockBackground.setVisibility(View.VISIBLE);
             }
         } else {
             mPreviousView.setVisibility(View.VISIBLE);
@@ -875,8 +881,10 @@ public final class Launcher extends Activity
                dockBackground.setVisibility(View.GONE);
             } else if (mUseDarkBackground) {
                dockBackground.setBackgroundResource(R.drawable.dock_two_dark);
+               dockBackground.setVisibility(View.VISIBLE);
             } else {
                dockBackground.setBackgroundResource(R.drawable.dock_two); 
+               dockBackground.setVisibility(View.VISIBLE);
             }
         }
 
@@ -2570,6 +2578,16 @@ public final class Launcher extends Activity
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sp,
         String key) {
+
+        if (key.equals("ExtendedHotseats")) {
+	    setupViews();
+        }
+        else if (key.equals("DarkBackground")) {
+	   setupViews();
+        }
+        else if (key.equals("TransparentBackground")) {
+	   setupViews();
+        }
         Log.d(TAG, "W.e d00d");
     }
 }
