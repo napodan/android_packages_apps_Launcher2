@@ -67,7 +67,7 @@ static float g_Animation = 1.f;
 static float g_OldPosPage;
 static float g_OldPosVelocity;
 static float g_OldZoom;
-static float g_MoveToTotalTime = 0.2f;
+static float g_MoveToTotalTime = 0.1f;
 static float g_MoveToTime = 0.f;
 static float g_MoveToOldPos = 0.f;
 
@@ -114,7 +114,7 @@ void move() {
     if (g_LastTouchDown) {
         float dx = -(gNewPositionX - g_LastPositionX);
         g_PosVelocity = 0;
-        g_PosPage += dx * 5.2f;
+        g_PosPage += dx * 7.2f;
 
         float pmin = -0.49f;
         float pmax = g_PosMax + 0.49f;
@@ -139,9 +139,9 @@ void setZoom() {
 
 void fling() {
     g_LastTouchDown = 0;
-    g_PosVelocity = -gFlingVelocity * 4;
+    g_PosVelocity = -gFlingVelocity * 6;
     float av = fabs(g_PosVelocity);
-    float minVel = 3.5f;
+    float minVel = 1.5f;
 
     minVel *= 1.f - (fabs(rsFrac(g_PosPage + 0.5f) - 0.5f) * 0.45f);
 
@@ -354,7 +354,7 @@ int root()
     g_DT = min(g_DT, 0.2f);
 
     if (g_Zoom != gZoomTarget) {
-        float dz = g_DT * 1.7f;
+        float dz = g_DT * 3.5f;
         if (gZoomTarget < 0.5f) {
             dz = -dz;
         }
