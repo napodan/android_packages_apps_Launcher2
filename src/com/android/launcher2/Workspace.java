@@ -29,8 +29,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.IBinder;
@@ -119,6 +122,13 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     private int mTouchSlop;
     private int mMaximumVelocity;
 
+    private Paint mPaint;
+    private int mWallpaperWidth;
+    private int mWallpaperHeight;
+    private float mWallpaperOffset;
+    private BitmapDrawable mWallpaperDrawable;
+    private boolean mWallpaperLoaded;
+
     private static final int INVALID_POINTER = -1;
 
     private int mActivePointerId = INVALID_POINTER;
@@ -205,6 +215,8 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
         mScroller = new Scroller(context, mScrollInterpolator);
         mCurrentScreen = mDefaultScreen;
         Launcher.setScreen(mCurrentScreen);
+        mPaint = new Paint();
+        mPaint.setDither(false);
         LauncherApplication app = (LauncherApplication)context.getApplicationContext();
         mIconCache = app.getIconCache();
 
@@ -529,7 +541,14 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     }
 
     private void updateWallpaperOffset() {
-        updateWallpaperOffset(getChildAt(getChildCount() - 1).getRight() - (mRight - mLeft));
+        if (Preferences.getInstance().getWallpaperScrolling()) {    
+            updateWallpaperOffset(getChildAt(getChildCount() - 1).getRight() - (getRight() - getLeft()));
+        }
+    }
+    
+    private void centerWallpaperOffset() {
+        mWallpaperManager.setWallpaperOffsetSteps(0.5f, 0);
+        mWallpaperManager.setWallpaperOffsets(getWindowToken(), 0.5f, 0);
     }
 
     private void updateWallpaperOffset(int scrollRange) {
@@ -594,6 +613,20 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
     protected void dispatchDraw(Canvas canvas) {
         boolean restore = false;
         int restoreCount = 0;
+
+        if (mWallpaperDrawable != null) {
+            float x = getScrollX() * mWallpaperOffset;
+        if (x + mWallpaperWidth < getRight() - getLeft()) {
+            x = getRight() - getLeft() - mWallpaperWidth;
+        }
+
+        if (mScrollX < 0) x = mScrollX;
+        if (mScrollX > getChildAt(getChildCount() - 1).getRight() - (mRight - mLeft)) {
+                x = (mScrollX - mWallpaperWidth + (mRight - mLeft));
+        }
+        if (!Preferences.getInstance().getWallpaperScrolling() || getChildCount() == 1) x = (getScrollX() - (mWallpaperWidth / 2) + (getRight() / 2));
+                canvas.drawBitmap(mWallpaperDrawable.getBitmap(), x, (getBottom() - mWallpaperHeight) / 2, mPaint);
+        }
 
         // ViewGroup.dispatchDraw() supports many features we don't need:
         // clip to padding, layout animation, animation listener, disappearing
@@ -681,6 +714,15 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             getChildAt(i).measure(widthMeasureSpec, heightMeasureSpec);
         }
 
+        if (mWallpaperLoaded) {
+            mWallpaperLoaded = false;
+            mWallpaperWidth = mWallpaperDrawable.getIntrinsicWidth();
+            mWallpaperHeight = mWallpaperDrawable.getIntrinsicHeight();
+        }
+
+        final int wallpaperWidth = mWallpaperWidth;
+        mWallpaperOffset = wallpaperWidth > width ? (count * width - wallpaperWidth) / ((count -1) * (float) width) : 1.0f;
+
         if (mFirstLayout) {
             setHorizontalScrollBarEnabled(false);
             scrollTo(mCurrentScreen * width, 0);
@@ -708,6 +750,12 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
             // When the device is rotated, the scroll position of the current screen
             // needs to be refreshed
             setCurrentScreen(getCurrentScreen());
+        }
+
+        if (Preferences.getInstance().getWallpaperScrolling()) {
+            updateWallpaperOffset();
+        } else {
+            centerWallpaperOffset();
         }
     }
 
@@ -1705,6 +1753,21 @@ public class Workspace extends WidgetSpace implements DropTarget, DragSource, Dr
                 return new SavedState[size];
             }
         };
+    }
+
+    public void setWallpaper(boolean fromIntentReceiver) {
+        if (mWallpaperManager.getWallpaperInfo() != null) {
+            mWallpaperDrawable = null;
+            mWallpaperLoaded = false;
+        } else {
+            if (fromIntentReceiver || mWallpaperDrawable == null) {
+                final Drawable drawable = mWallpaperManager.getDrawable();
+                mWallpaperDrawable = (BitmapDrawable) drawable;
+                mWallpaperLoaded = true;
+            }
+        }
+        invalidate();
+        requestLayout();
     }
     
     @Override
