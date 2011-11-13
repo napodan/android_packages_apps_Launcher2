@@ -85,6 +85,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.DataInputStream;
 
+import mobi.intuitit.android.content.LauncherIntent;
+import mobi.intuitit.android.content.LauncherMetadata;
+
 import com.android.launcher.R;
 
 /**
@@ -940,10 +943,17 @@ public final class Launcher extends Activity
 
             mWorkspace.addInCurrentScreen(launcherInfo.hostView, xy[0], xy[1],
                     launcherInfo.spanX, launcherInfo.spanY, isWorkspaceLocked());
+
+            // finish load a widget, send it an intent
+            if (appWidgetInfo != null)
+                appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
         }
     }
 
     public void removeAppWidget(LauncherAppWidgetInfo launcherInfo) {
+        int appWidgetId = launcherInfo.appWidgetId;
+        if (mWorkspace.isWidgetScrollable(appWidgetId))
+            mWorkspace.unbindWidgetScrollableId(appWidgetId);
         mDesktopItems.remove(launcherInfo);
         launcherInfo.hostView = null;
     }
@@ -1070,6 +1080,7 @@ public final class Launcher extends Activity
         dismissPreview(mNextView);
 
         unregisterReceiver(mCloseSystemDialogsReceiver);
+        mWorkspace.unregisterProvider();
     }
 
     @Override
@@ -2266,13 +2277,20 @@ public final class Launcher extends Activity
                 item.cellY, item.spanX, item.spanY, false);
 
         workspace.requestLayout();
+        // finish load a widget, send it an intent
+        if (appWidgetInfo != null) 
+            appwidgetReadyBroadcast(appWidgetId, appWidgetInfo.provider);
 
-        mDesktopItems.add(item);
-
-        if (DEBUG_WIDGETS) {
-            Log.d(TAG, "bound widget id="+item.appWidgetId+" in "
-                    + (SystemClock.uptimeMillis()-start) + "ms");
+            mDesktopItems.add(item);
         }
+
+    private void appwidgetReadyBroadcast(int appWidgetId, ComponentName cname) {
+        Intent ready = new Intent(LauncherIntent.Action.ACTION_READY).putExtra(
+            LauncherIntent.Extra.EXTRA_APPWIDGET_ID, appWidgetId).putExtra(
+                AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId).putExtra(
+                LauncherIntent.Extra.EXTRA_API_VERSION, LauncherMetadata.CurrentAPIVersion).
+            setComponent(cname);
+            sendBroadcast(ready);
     }
 
     /**
