@@ -970,7 +970,7 @@ public class AllApps3D extends RSSurfaceView
         private int mHeight;
 
         private Resources mRes;
-        ScriptC_allapps mScript;
+        ScriptC_Allapps mScript;
 
         //private ProgramStore mPSIcons;
         private ProgramFragment mPFTexMip;
@@ -1038,7 +1038,7 @@ public class AllApps3D extends RSSurfaceView
             mRes = res;
             mWidth = width;
             mHeight = height;
-            mScript = new ScriptC_allapps(sRS, mRes, R.raw.allapps_bc, true);
+            mScript = new ScriptC_Allapps(sRS, mRes, R.raw.allapps_bc, true);
 
             initProgramVertex();
             initProgramFragment();
@@ -1269,7 +1269,7 @@ public class AllApps3D extends RSSurfaceView
                 sRollo.mScript.set_gZoomTarget(0);
             }
             if (!animate) {
-                sRollo.mScript.invokable_SetZoom();
+                sRollo.mScript.invoke_setZoom();
             }
         }
 
@@ -1373,16 +1373,16 @@ public class AllApps3D extends RSSurfaceView
         }
 
         void fling() {
-            mScript.invokable_Fling();
+            mScript.invoke_fling();
         }
 
         void move() {
-            mScript.invokable_Move();
+            mScript.invoke_move();
         }
 
         void moveTo(float row) {
             mScript.set_gTargetPos(row);
-            mScript.invokable_MoveTo();
+            mScript.invoke_moveTo();
         }
 
         /**
