@@ -1525,5 +1525,3 @@ public class AllApps3D extends RSSurfaceView
         }
     }
 }
-
-
